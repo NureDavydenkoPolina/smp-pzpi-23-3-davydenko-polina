@@ -1,0 +1,156 @@
+$products = [
+    1 => ['name' => 'Молоко пастеризоване', 'price' => 12],
+    2 => ['name' => 'Хліб чорний', 'price' => 9],
+    3 => ['name' => 'Сир білий', 'price' => 21],
+    4 => ['name' => 'Сметана 20%', 'price' => 25],
+    5 => ['name' => 'Кефір 1%', 'price' => 19],
+    6 => ['name' => 'Вода газована', 'price' => 18],
+    7 => ['name' => 'Печиво "Весна"', 'price' => 14],
+];
+$cart = [];
+$profile = ['name' => '', 'age' => 0];
+function showMenu() {
+    echo "################################\n";
+    echo "# ПРОДОВОЛЬЧИЙ МАГАЗИН \"ВЕСНА\" #\n";
+    echo "################################\n";
+    echo "1 Вибрати товари\n";
+    echo "2 Отримати підсумковий рахунок\n";
+    echo "3 Налаштувати свій профіль\n";
+    echo "0 Вийти з програми\n";
+}
+function showProducts($products) {
+    echo "№  НАЗВА                 ЦІНА\n";
+    foreach ($products as $id => $product) {
+        printf("%-3d%-22s%3d\n", $id, $product['name'], $product['price']);
+    }
+    echo "   -----------\n";
+    echo "0  ПОВЕРНУТИСЯ\n";
+}
+function myReadLine($prompt = '') {
+    echo $prompt;
+    return trim(fgets(STDIN));
+}
+function selectProducts(&$products, &$cart) {
+    while (true) {
+        showProducts($products);
+        $input = myReadLine("Виберіть товар: ");
+        if (!is_numeric($input)) {
+            echo "ПОМИЛКА! ВКАЗАНО НЕПРАВИЛЬНИЙ НОМЕР ТОВАРУ\n";
+            continue;
+        }
+
+        $choice = intval($input);
+        if ($choice === 0) {
+            return;
+        }
+
+        if (!isset($products[$choice])) {
+            echo "ПОМИЛКА! ВКАЗАНО НЕПРАВИЛЬНИЙ НОМЕР ТОВАРУ\n";
+            continue;
+        }
+
+        $productName = $products[$choice]['name'];
+        echo "Вибрано: $productName\n";
+        
+        while (true) {
+            $qty = myReadLine("Введіть кількість, штук: ");
+            if (!is_numeric($qty)) {
+                echo "ПОМИЛКА! Кількість повинна бути числом\n";
+                continue;
+            }
+
+            $qty = intval($qty);
+
+            if ($qty < 0 || $qty >= 100) {
+                echo "ПОМИЛКА! Кількість має бути від 0 до 99\n";
+                continue;
+            }
+
+            if ($qty === 0) {
+                unset($cart[$choice]);
+                echo "ВИДАЛЯЮ З КОШИКА\n";
+            } else {
+                $cart[$choice] = $qty;
+            }
+
+            break;
+        }
+
+        if (empty($cart)) {
+            echo "КОШИК ПОРОЖНІЙ\n";
+        } else {
+            echo "У КОШИКУ:\nНАЗВА        КІЛЬКІСТЬ\n";
+            foreach ($cart as $id => $qty) {
+                echo $products[$id]['name'] . "  $qty\n";
+            }
+        }
+    }
+}
+function printReceipt($products, $cart) {
+    if (empty($cart)) {
+        echo "КОШИК ПОРОЖНІЙ. Немає товарів для рахунку.\n";
+        return;
+    }
+
+    echo "№  НАЗВА                 ЦІНА  КІЛЬКІСТЬ  ВАРТІСТЬ\n";
+    $i = 1;
+    $total = 0;
+    foreach ($cart as $id => $qty) {
+        $name = $products[$id]['name'];
+        $price = $products[$id]['price'];
+        $cost = $price * $qty;
+        $total += $cost;
+        printf("%-3d%-22s%-6d%-10d%-5d\n", $i, $name, $price, $qty, $cost);
+        $i++;
+    }
+    echo "РАЗОМ ДО CПЛАТИ: $total\n";
+}
+function setupProfile(&$profile) {
+    while (true) {
+        $name = myReadLine("Ваше імʼя: ");
+        if (!preg_match('/[a-zA-Zа-яА-ЯіІїЇєЄґҐ]/u', $name)) {
+            echo "Імʼя користувача не може бути порожнім і повинно містити хоча б одну літеру.\n";
+            continue;
+        }
+        break;
+    }
+
+    while (true) {
+        $age = myReadLine("Ваш вік: ");
+        if (!is_numeric($age) || $age < 7 || $age > 150) {
+            echo "Користувач не може бути молодшим 7-ми або старшим 150-ти років\n";
+            continue;
+        }
+        break;
+    }
+
+    $profile['name'] = $name;
+    $profile['age'] = intval($age);
+    echo "Профіль налаштовано: {$profile['name']}, {$profile['age']} років\n";
+}
+while (true) {
+    showMenu();
+    $input = myReadLine("Введіть команду: ");
+    if (!is_numeric($input)) {
+        echo "ПОМИЛКА! Введіть правильну команду\n";
+        continue;
+    }
+
+    $command = intval($input);
+    switch ($command) {
+        case 1:
+            selectProducts($products, $cart);
+            break;
+        case 2:
+            printReceipt($products, $cart);
+            break;
+        case 3:
+            setupProfile($profile);
+            break;
+        case 0:
+            echo "До побачення!\n";
+            exit;
+        default:
+            echo "ПОМИЛКА! Введіть правильну команду\n";
+    }
+}
