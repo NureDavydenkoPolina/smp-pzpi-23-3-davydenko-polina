@@ -1,0 +1,346 @@
+Харківський національний університет радіоелектроніки
+Факультет комп’ютерних наук
+Катедра програмної інженерії
+
+ЗВІТ
+з лабораторної роботи №3
+з дисципліни «Скриптові мови програмування»
+на тему: «СТВОРЕННЯ WEB-ЗАСТОСУІНКІВ ЗА ДОПОМОГОЮ PHP»
+
+Викона(в/ла)
+ст. гр. ПЗПІ-23-3
+Давиденко Поліна
+
+Перевірив
+ст. викладач катедри ПІ
+Сокорчук Ігор Петрович
+
+Харків 2025
+________________________________________ 
+
+1 ІСТОРІЯ ЗМІН
+№	Дата	Версія звіту	Опис змін та виправлень
+1	15.05.2025	0.1	Створено розділ «Завдання»
+2	15.05.2025	1	Створено розділ «Опис Виконаної роботи». Додано висновки, додатки і оформлено звіт
+________________________________________ 
+
+2 ЗАВДАННЯ
+–	Отримати базові знання з розробки сайтів.
+–	Створити робочий сайт з інтернет-магазином. 
+________________________________________ 
+
+3 ОПИС ВИКОНАНОЇ РОБОТИ
+	Було реалізовано просту веб-версію онлайн-магазину з використанням мови програмування PHP, HTML, CSS та сесійного механізму збереження даних. Система складається з трьох основних файлів:
+–	index.php – головна сторінка магазину, на якій відображається список товарів, їх ціна та форма введення кількості для додавання в кошик. Після натискання кнопки "Add" обрані товари зберігаються в сесії ($_SESSION['cart']) та відбувається перенаправлення на сторінку кошика (див. додаток Б).
+–	basket.php – сторінка перегляду кошика. Виводить детальну інформацію про обрані товари, дозволяє видалити окремі позиції, а також очистити кошик повністю за допомогою кнопок "Pay" або "Cancel". Обробка даних також здійснюється через POST-запити (див. додаток В).
+–	style.css – файл стилів для оформлення інтерфейсу магазину (див. додаток Г).
+
+	Функціональність програми:
+–	додавання товарів у кошик із валідацією введеної кількості;
+–	збереження даних кошика між сторінками за допомогою сесій;
+–	перегляд і редагування вмісту кошика;
+–	можливість оплати (демо-режим) або скасування замовлення.
+________________________________________ 
+
+4 ВИСНОВКИ
+	Було реалізовано просту веб-сторінку інтернет-магазину з можливістю додавання товарів до кошика та перегляду його вмісту. У файлі index.php відображається список товарів, користувач може ввести кількість і додати обрані позиції до кошика. Дані зберігаються у сесії. У basket.php користувач бачить перелік доданих товарів, їхню загальну суму та має можливість видалити товар, оплатити або скасувати замовлення. Файл style.css відповідає за адаптивне, сучасне оформлення сайту. Проєкт демонструє базові принципи роботи з формами, сесіями та обробкою POST-запитів у PHP.
+________________________________________ 
+
+ДОДАТОК А
+Відеозапис
+Відеозапис презентації результатів лабораторної роботи: 
+https://youtu.be/PANkxFQSA88
+Хронологічний опис відеозапису:
+00:00 — Короткий опис відео
+00:19 — Опис коду
+04:00 — Тестування
+________________________________________ 
+
+ДОДАТОК Б
+Програмний код index.php
+	GitHub репозиторій: https://github.com/NureDavydenkoPolina/smp-pzpi-23-3-davydenko-polina/blob/main/Lab3/smp-pzpi-23-3-davydenko-polina-lab3/index.php
+  1 <?php
+  2 session_start();
+  3
+  4 $products = [
+  5     1 => ["name" => "🥛 Pasteurized Milk", "price" => 12],
+  6     2 => ["name" => "🍞 Black Bread", "price" => 9],
+  7     3 => ["name" => "🧀 White Cheese", "price" => 21],
+  8     4 => ["name" => "🥣 Sour Cream 20%", "price" => 25],
+  9     5 => ["name" => "🥤 Kefir 1%", "price" => 19],
+ 10     6 => ["name" => "💧 Sparkling Water", "price" => 18],
+ 11     7 => ["name" => "🍪 Cookies \"Весна\"", "price" => 14],
+ 12 ];
+ 13
+ 14 // Обробка покупки
+ 15 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+ 16     foreach ($products as $id => $product) {
+ 17         $count = (int)($_POST["count_$id"] ?? 0);
+ 18         if ($count > 0) {
+ 19             $_SESSION['cart'][$id] = [
+ 20                 'id' => $id,
+ 21                 'name' => $product['name'],
+ 22                 'price' => $product['price'],
+ 23                 'count' => $count,
+ 24             ];
+ 25         }
+ 26     }
+ 27     header('Location: basket.php');
+ 28     exit;
+ 29 }
+ 30 ?>
+ 31
+ 32 <!DOCTYPE html>
+ 33 <html lang="uk">
+ 34 <head>
+ 35     <meta charset="UTF-8">
+ 36     <title>Shop</title>
+ 37     <link rel="stylesheet" href="style.css">
+ 38 </head>
+ 39 <body>
+ 40 <header>
+ 41     <nav class="top-nav">
+ 42         <a href="index.php" class="left">Home</a>
+ 43         <a href="index.php" class="center">Products</a>
+ 44         <a href="basket.php" class="right">Cart</a>
+ 45     </nav>
+ 46 </header>
+ 47
+ 48 <main>
+ 49     <h1>Welcome to our store!</h1>
+ 50     <p>We offer the best products at affordable prices.</p>
+ 51
+ 52     <h2>Products</h2>
+ 53     <form method="POST">
+ 54         <table>
+ 55             <tr style="background-color:powderblue;"><th>Name</th><th>Price</th><th>Amount</th></tr>
+ 56             <?php foreach ($products as $id => $product): ?>
+ 57             <tr>
+ 58                 <td><?= $product['name'] ?></td>
+ 59                 <td><?= $product['price'] ?> грн</td>
+ 60                 <td><input type="number" name="count_<?= $id ?>" min="0" value="0"></td>
+ 61             </tr>
+ 62             <?php endforeach; ?>
+ 63         </table>
+ 64         <button type="submit">Add</button>
+ 65     </form>
+ 66 </main>
+ 67
+ 68 <footer>
+ 69     <div class="bottom-nav">
+ 70         <a href="index.php">Home</a> |
+ 71         <a href="index.php">Products</a> |
+ 72         <a href="basket.php">Cart</a> |
+ 73         <a href="#">About Us</a>
+ 74     </div>
+ 75 </footer>
+ 76 </body>
+ 77 </html>
+ 78
+________________________________________ 
+
+ДОДАТОК В
+Програмний код basket.php
+	GitHub репозиторій: https://github.com/NureDavydenkoPolina/smp-pzpi-23-3-davydenko-polina/blob/main/Lab3/smp-pzpi-23-3-davydenko-polina-lab3/basket.php
+  1 <?php
+  2 session_start();
+  3 $cart = $_SESSION['cart'] ?? [];
+  4
+  5 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  6     if (isset($_POST['remove_id'])) {
+  7         $removeId = $_POST['remove_id'];
+  8         unset($_SESSION['cart'][$removeId]);
+  9         if (empty($_SESSION['cart'])) {
+ 10             unset($_SESSION['cart']);
+ 11         }
+ 12     }
+ 13     // Обробка оплати чи скасування (демо)
+ 14     if (isset($_POST['pay'])) {
+ 15         $_SESSION['cart'] = [];
+ 16         header('Location: basket.php');
+ 17         exit;
+ 18     }
+ 19     if (isset($_POST['cancel'])) {
+ 20         $_SESSION['cart'] = [];
+ 21         header('Location: basket.php');
+ 22         exit;
+ 23     }
+ 24 }
+ 25 ?>
+ 26
+ 27 <!DOCTYPE html>
+ 28 <html lang="uk">
+ 29 <head>
+ 30     <meta charset="UTF-8">
+ 31     <title>Cart</title>
+ 32     <link rel="stylesheet" href="style.css">
+ 33 </head>
+ 34 <body>
+ 35 <header>
+ 36     <nav class="top-nav">
+ 37         <a href="index.php" class="left">Home</a>
+ 38         <a href="index.php" class="center">Products</a>
+ 39         <a href="basket.php" class="right">Cart</a>
+ 40     </nav>
+ 41 </header>
+ 42
+ 43 <main>
+ 44     <h1>Your Cart</h1>
+ 45     <?php if (empty($cart)): ?>
+ 46         <p><a href="index.php">Go to shopping</a></p>
+ 47     <?php else: ?>
+ 48         <form method="POST">
+ 49             <table>
+ 50                 <tr style="background-color:powderblue;">
+ 51                     <th>ID</th><th>Name</th><th>Price</th><th>Amount</th><th>Sum</th><th>Delete</th>
+ 52                 </tr>
+ 53                 <?php $total = 0; ?>
+ 54                 <?php foreach ($cart as $item): ?>
+ 55                     <tr>
+ 56                         <td><?= $item['id'] ?></td>
+ 57                         <td><?= $item['name'] ?></td>
+ 58                         <td><?= $item['price'] ?> грн</td>
+ 59                         <td><?= $item['count'] ?></td>
+ 60                         <td><?= $item['price'] * $item['count'] ?> грн</td>
+ 61                         <td>
+ 62                             <button type="submit" name="remove_id" value="<?= $item['id'] ?>" class="trash-button">🗑️</button>
+ 63                         </td>
+ 64                     </tr>
+ 65                     <?php $total += $item['price'] * $item['count']; ?>
+ 66                 <?php endforeach; ?>
+ 67                 <tr>
+ 68                     <td colspan="4"><strong>Total</strong></td>
+ 69                     <td><strong><?= $total ?> грн</strong></td>
+ 70                     <td></td>
+ 71                 </tr>
+ 72             </table>
+ 73
+ 74             <div class="button-group">
+ 75                 <button type="submit" name="pay">Pay</button>
+ 76                 <button type="submit" name="cancel">Cancel</button>
+ 77             </div>
+ 78         </form>
+ 79     <?php endif; ?>
+ 80 </main>
+ 81
+ 82 <footer>
+ 83     <div class="bottom-nav">
+ 84         <a href="index.php">Home</a> |
+ 85         <a href="index.php">Products</a> |
+ 86         <a href="basket.php">Cart</a> |
+ 87         <a href="#">About Us</a>
+ 88     </div>
+ 89 </footer>
+ 90 </body>
+ 91 </html>
+ 92 
+________________________________________ 
+
+ДОДАТОК Г
+Програмний код style.css
+	GitHub репозиторій: https://github.com/NureDavydenkoPolina/smp-pzpi-23-3-davydenko-polina/blob/main/Lab3/smp-pzpi-23-3-davydenko-polina-lab3/style.css
+  1 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap');
+  2
+  3 body {
+  4     font-family: 'Poppins', sans-serif;
+  5     margin: 0;
+  6     padding: 0;
+  7     background: #f9fbfd;
+  8     color: #333;
+  9 }
+ 10
+ 11 header, footer {
+ 12     background: #0066cc;
+ 13     color: white;
+ 14     text-align: center;
+ 15     padding: 1em 0;
+ 16 }
+ 17
+ 18 .top-nav, .bottom-nav {
+ 19     display: flex;
+ 20     justify-content: center;
+ 21     gap: 1.5em;
+ 22 }
+ 23
+ 24 .top-nav a, .bottom-nav a {
+ 25     color: white;
+ 26     text-decoration: none;
+ 27     font-weight: 500;
+ 28 }
+ 29
+ 30 main {
+ 31     padding: 30px;
+ 32     max-width: 1000px;
+ 33     margin: auto;
+ 34 }
+ 35
+ 36 h1, h2 {
+ 37     text-align: center;
+ 38     color: #004080;
+ 39 }
+ 40
+ 41 table {
+ 42     width: 100%;
+ 43     border-collapse: collapse;
+ 44     background: white;
+ 45     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+ 46     margin-top: 20px;
+ 47 }
+ 48
+ 49 table th {
+ 50     background-color: #e6f0ff;
+ 51     color: #003366;
+ 52     font-weight: 600;
+ 53 }
+ 54
+ 55 th, td {
+ 56     padding: 12px;
+ 57     border: 1px solid #cce0ff;
+ 58     text-align: center;
+ 59 }
+ 60
+ 61 button {
+ 62     background: #007bff;
+ 63     color: white;
+ 64     border: none;
+ 65     border-radius: 6px;
+ 66     padding: 10px 20px;
+ 67     font-size: 16px;
+ 68     cursor: pointer;
+ 69     transition: background 0.3s ease;
+ 70 }
+ 71
+ 72 button:hover {
+ 73     background: #0056b3;
+ 74 }
+ 75
+ 76 .button-group {
+ 77     margin-top: 20px;
+ 78     display: flex;
+ 79     justify-content: center;
+ 80     gap: 15px;
+ 81 }
+ 82
+ 83 input[type="number"] {
+ 84     width: 60px;
+ 85     padding: 5px;
+ 86     border: 1px solid #bbb;
+ 87     border-radius: 4px;
+ 88 }
+ 89
+ 90 .trash-button {
+ 91     font-size: 20px;
+ 92     background: none;
+ 93     border: none;
+ 94     cursor: pointer;
+ 95 }
+ 96
+ 97 .trash-button:hover {
+ 98     transform: scale(1.2);
+ 99 }
+100
+101 .left-button {
+102     margin: 20px 0;
+103     float: left;
+104     clear: both;
+105 }
