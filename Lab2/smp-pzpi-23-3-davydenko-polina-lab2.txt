@@ -58,3 +58,161 @@ ________________________________________ 
 ДОДАТОК Б
 Програмний код
 	GitHub репозиторій: https://github.com/NureDavydenkoPolina/smp-pzpi-23-3-davydenko-polina/blob/main/Lab2/smp-pzpi-23-3-davydenko-polina-lab2/smp-pzpi-23-3-davydenko-polina-lab2-code
+
+  1 $products = [
+  2     1 => ['name' => 'Молоко пастеризоване', 'price' => 12],
+  3     2 => ['name' => 'Хліб чорний', 'price' => 9],
+  4     3 => ['name' => 'Сир білий', 'price' => 21],
+  5     4 => ['name' => 'Сметана 20%', 'price' => 25],
+  6     5 => ['name' => 'Кефір 1%', 'price' => 19],
+  7     6 => ['name' => 'Вода газована', 'price' => 18],
+  8     7 => ['name' => 'Печиво "Весна"', 'price' => 14],
+  9 ];
+ 10 $cart = [];
+ 11 $profile = ['name' => '', 'age' => 0];
+ 12 function showMenu() {
+ 13     echo "################################\n";
+ 14     echo "# ПРОДОВОЛЬЧИЙ МАГАЗИН \"ВЕСНА\" #\n";
+ 15     echo "################################\n";
+ 16     echo "1 Вибрати товари\n";
+ 17     echo "2 Отримати підсумковий рахунок\n";
+ 18     echo "3 Налаштувати свій профіль\n";
+ 19     echo "0 Вийти з програми\n";
+ 20 }
+ 21 function showProducts($products) {
+ 22     echo "№  НАЗВА                 ЦІНА\n";
+ 23     foreach ($products as $id => $product) {
+ 24         printf("%-3d%-22s%3d\n", $id, $product['name'], $product['price']);
+ 25     }
+ 26     echo "   -----------\n";
+ 27     echo "0  ПОВЕРНУТИСЯ\n";
+ 28 }
+ 29 function myReadLine($prompt = '') {
+ 30     echo $prompt;
+ 31     return trim(fgets(STDIN));
+ 32 }
+ 33 function selectProducts(&$products, &$cart) {
+ 34     while (true) {
+ 35         showProducts($products);
+ 36         $input = myReadLine("Виберіть товар: ");
+ 37         if (!is_numeric($input)) {
+ 38             echo "ПОМИЛКА! ВКАЗАНО НЕПРАВИЛЬНИЙ НОМЕР ТОВАРУ\n";
+ 39             continue;
+ 40         }
+ 41 
+ 42         $choice = intval($input);
+ 43         if ($choice === 0) {
+ 44             return;
+ 45         }
+ 46 
+ 47         if (!isset($products[$choice])) {
+ 48             echo "ПОМИЛКА! ВКАЗАНО НЕПРАВИЛЬНИЙ НОМЕР ТОВАРУ\n";
+ 49             continue;
+ 50         }
+ 51 
+ 52         $productName = $products[$choice]['name'];
+ 53         echo "Вибрано: $productName\n";
+ 54         
+ 55         while (true) {
+ 56             $qty = myReadLine("Введіть кількість, штук: ");
+ 57             if (!is_numeric($qty)) {
+ 58                 echo "ПОМИЛКА! Кількість повинна бути числом\n";
+ 59                 continue;
+ 60             }
+ 61 
+ 62             $qty = intval($qty);
+ 63 
+ 64             if ($qty < 0 || $qty >= 100) {
+ 65                 echo "ПОМИЛКА! Кількість має бути від 0 до 99\n";
+ 66                 continue;
+ 67             }
+ 68 
+ 69             if ($qty === 0) {
+ 70                 unset($cart[$choice]);
+ 71                 echo "ВИДАЛЯЮ З КОШИКА\n";
+ 72             } else {
+ 73                 $cart[$choice] = $qty;
+ 74             }
+ 75 
+ 76             break;
+ 77         }
+ 78 
+ 79         if (empty($cart)) {
+ 80             echo "КОШИК ПОРОЖНІЙ\n";
+ 81         } else {
+ 82             echo "У КОШИКУ:\nНАЗВА        КІЛЬКІСТЬ\n";
+ 83             foreach ($cart as $id => $qty) {
+ 84                 echo $products[$id]['name'] . "  $qty\n";
+ 85             }
+ 86         }
+ 87     }
+ 88 }
+ 89 function printReceipt($products, $cart) {
+ 90     if (empty($cart)) {
+ 91         echo "КОШИК ПОРОЖНІЙ. Немає товарів для рахунку.\n";
+ 92         return;
+ 93     }
+ 94 
+ 95     echo "№  НАЗВА                 ЦІНА  КІЛЬКІСТЬ  ВАРТІСТЬ\n";
+ 96     $i = 1;
+ 97     $total = 0;
+ 98     foreach ($cart as $id => $qty) {
+ 99         $name = $products[$id]['name'];
+100         $price = $products[$id]['price'];
+101         $cost = $price * $qty;
+102         $total += $cost;
+103         printf("%-3d%-22s%-6d%-10d%-5d\n", $i, $name, $price, $qty, $cost);
+104         $i++;
+105     }
+106     echo "РАЗОМ ДО CПЛАТИ: $total\n";
+107 }
+108 function setupProfile(&$profile) {
+109     while (true) {
+110         $name = myReadLine("Ваше імʼя: ");
+111         if (!preg_match('/[a-zA-Zа-яА-ЯіІїЇєЄґҐ]/u', $name)) {
+112             echo "Імʼя користувача не може бути порожнім і повинно містити хоча б одну літеру.\n";
+113             continue;
+114         }
+115         break;
+116     }
+117 
+118     while (true) {
+119         $age = myReadLine("Ваш вік: ");
+120         if (!is_numeric($age) || $age < 7 || $age > 150) {
+121             echo "Користувач не може бути молодшим 7-ми або старшим 150-ти років\n";
+122             continue;
+123         }
+124         break;
+125     }
+126 
+127     $profile['name'] = $name;
+128     $profile['age'] = intval($age);
+129     echo "Профіль налаштовано: {$profile['name']}, {$profile['age']} років\n";
+130 }
+131 while (true) {
+132     showMenu();
+133     $input = myReadLine("Введіть команду: ");
+134     if (!is_numeric($input)) {
+135         echo "ПОМИЛКА! Введіть правильну команду\n";
+136         continue;
+137     }
+138 
+139     $command = intval($input);
+140     switch ($command) {
+141         case 1:
+142             selectProducts($products, $cart);
+143             break;
+144         case 2:
+145             printReceipt($products, $cart);
+146             break;
+147         case 3:
+148             setupProfile($profile);
+149             break;
+150         case 0:
+151             echo "До побачення!\n";
+152             exit;
+153         default:
+154             echo "ПОМИЛКА! Введіть правильну команду\n";
+155     }
+156 }
+
