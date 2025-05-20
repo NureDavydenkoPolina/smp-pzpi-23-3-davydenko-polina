@@ -47,3 +47,69 @@ ________________________________________ 
 ДОДАТОК Б
 Програмний код
 	GitHub репозиторій: https://github.com/NureDavydenkoPolina/smp-pzpi-23-3-davydenko-polina/blob/main/Pract1/smp-pzpi-23-3-davydenko-polina-pract1/smp-pzpi-23-3-davydenko-polina-pract1-code
+  1 #!/bin/bash
+  2 
+  3 if [ $# -ne 2 ]
+  4 then
+  5     echo "Потрібно передати два значення" >&2
+  6     exit 1
+  7 fi
+  8 
+  9 if ! [[ $1 =~ ^[0-9]+$ ]] || ! [[ $2 =~ ^[0-9]+$ ]]
+ 10 then
+ 11     echo "Числа мають бути додатними та цілими" >&2
+ 12     exit 1
+ 13 fi
+ 14 
+ 15 tree_height=$1
+ 16 snow_width=$2
+ 17 
+ 18 if [ $tree_height -lt 3 ]
+ 19 then
+ 20     echo "Висота ялинки має бути не меншою за 3" >&2
+ 21     exit 1
+ 22 fi
+ 23 
+ 24 if [ $snow_width -lt 3 ]
+ 25 then
+ 26     echo "Ширина снігу має бути не меншою за 3" >&2
+ 27     exit 1
+ 28 fi
+ 29 
+ 30 branch_width=$((snow_width - 2))
+ 31 tier_height=$(((tree_height - 2) / 2))
+ 32 trunk_width=3
+ 33 trunk_height=2
+ 34 
+ 35 for (( tier = 0; tier < 2; tier++ )); do
+ 36     width=1
+ 37     i=0
+ 38     while [ $i -lt $tier_height ]
+ 39     do
+ 40         if [ $((i % 2)) -eq 0 ]
+ 41         then
+ 42             char="*"
+ 43         else
+ 44             char="#"
+ 45         fi
+ 46         spaces=$(((snow_width - width) / 2))
+ 47         printf "%*s" $spaces ""
+ 48         printf "%s\n" "$(printf "%${width}s" | tr ' ' "$char")"
+ 49         width=$((width + 2))
+ 50         i=$((i + 1))
+ 51     done
+ 52 
+ 53 done
+ 54 
+ 55 for trunk in trunk1 trunk2; do
+ 56     printf "%*s" $(((snow_width - trunk_width) / 2)) ""
+ 57     printf "%s\n" "$(printf "%${trunk_width}s" | tr ' ' "#")"
+ 58 done
+ 59 
+ 60 snow_layer=0
+ 61 until [ $snow_layer -eq 1 ]
+ 62 do
+ 63     printf "%s\n" "$(printf "%${snow_width}s" | tr ' ' "*")"
+ 64     snow_layer=1
+ 65 done
+
