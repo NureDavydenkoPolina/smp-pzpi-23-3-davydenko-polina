@@ -1,0 +1,469 @@
+Харківський національний університет радіоелектроніки
+Факультет комп’ютерних наук
+Катедра програмної інженерії
+
+ЗВІТ
+з лабораторної роботи №4
+з дисципліни «Скриптові мови програмування»
+на тему: «СТРУКТУРУВАННЯ КОДУ, РОБОТА 3 ФОРМАМИ,
+АВТЕНТИФІКАЦІЯ ТА АВТОРИЗАЦІЯ»
+
+Викона(в/ла)
+ст. гр. ПЗПІ-23-3
+Давиденко Поліна
+
+Перевірив
+ст. викладач катедри ПІ
+Сокорчук Ігор Петрович
+
+Харків 2025
+________________________________________ 
+
+1 ІСТОРІЯ ЗМІН
+№	Дата	Версія звіту	Опис змін та виправлень
+1	01.06.2025	0.1	Створено розділ «Завдання»
+2	05.06.2025	1	Створено розділ «Опис Виконаної роботи». Додано висновки, додатки і оформлено звіт
+________________________________________ 
+
+2 ЗАВДАННЯ
+–	Покращити сайт з інтернет-магазином. 
+________________________________________ 
+
+3 ОПИС ВИКОНАНОЇ РОБОТИ
+	У результаті виконаної роботи було створено функціональний інтернет-магазин з базовою, але водночас важливою логікою, що охоплює ключові аспекти роботи з користувачем та товарами. Розробка проекту дала змогу закріпити знання з програмування на PHP, роботи з сесіями, базами даних та обробкою форм.
+	Було реалізовано систему автентифікації користувачів, що забезпечує доступ до основного функціоналу сайту лише зареєстрованим користувачам. Це покращує безпеку та дозволяє персоналізувати роботу сайту під конкретного користувача.
+	Використання бази даних SQLite для зберігання інформації про товари спростило процес керування асортиментом магазину, надавши можливість легко додавати, змінювати та видаляти записи. Це значно ефективніше за зберігання товарів у вигляді масиву в коді, особливо при збільшенні кількості товарів.
+	Корзина покупок реалізована з використанням сесій, що дозволяє зберігати вибрані товари для користувача на час сесії. Додано функції додавання, видалення товарів із корзини, а також завершення замовлення (оплата або скасування).
+	Сторінка профілю користувача забезпечує можливість збереження та редагування персональних даних, включаючи ім'я, прізвище, дату народження, стислу інформацію та фото. Особливу увагу було приділено валідації даних, щоб гарантувати їх коректність і безпеку, а також перевірці формату завантажених файлів. Впровадження завантаження фото та його збереження на сервері підвищує рівень персоналізації і зручності користувача.
+________________________________________ 
+
+4 ВИСНОВКИ
+	У ході розробки даного інтернет-магазину було реалізовано базовий функціонал, який включає авторизацію користувачів, перегляд і вибір товарів, управління корзиною покупок, а також редагування профілю користувача з можливістю завантаження фото.
+	Використання PHP сесій дозволило ефективно зберігати стан користувача та його замовлень без необхідності складної інфраструктури. Застосування бази даних SQLite надало простий і зручний спосіб зберігання та отримання інформації про товари.
+	Проект демонструє основні принципи побудови веб-застосунків із розділенням логіки та відображення, валідацією введених даних і безпечним обробленням файлів користувача. 
+________________________________________ 
+
+ДОДАТОК А
+Відеозапис
+Відеозапис презентації результатів лабораторної роботи: 
+https://youtu.be/0VbPzSqOv3A
+Хронологічний опис відеозапису:
+00:00 — Короткий опис відео
+00:22 — Опис коду
+10:45 — Тестування
+________________________________________ 
+
+ДОДАТОК Б
+Програмний код
+	GitHub репозиторій: https://github.com/NureDavydenkoPolina/smp-pzpi-23-3-davydenko-polina/tree/main/Lab4/smp-pzpi-23-3-davydenko-polina-lab4
+cart.php
+  1 <?php
+  2 if (session_status() === PHP_SESSION_NONE) {
+  3     session_start();
+  4 }
+  5 $cart = $_SESSION['cart'] ?? [];
+  6
+  7 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  8     if (isset($_POST['remove_id'])) {
+  9         $removeId = $_POST['remove_id'];
+ 10         unset($_SESSION['cart'][$removeId]);
+ 11         if (empty($_SESSION['cart'])) {
+ 12             unset($_SESSION['cart']);
+ 13         }
+ 14     }
+ 15     if (isset($_POST['pay'])) {
+ 16         $_SESSION['cart'] = [];
+ 17         header('Location: index.php?page=cart');
+ 18         exit;
+ 19     }
+ 20     if (isset($_POST['cancel'])) {
+ 21         $_SESSION['cart'] = [];
+ 22         header('Location: index.php?page=cart');
+ 23         exit;
+ 24     }
+ 25 }
+ 26 ?>
+ 27
+ 28 <main>
+ 29     <h1>Your Cart</h1>
+ 30     <?php if (empty($cart)): ?>
+ 31         <p><a href="index.php">Go to shopping</a></p>
+ 32     <?php else: ?>
+ 33         <form method="POST">
+ 34             <table>
+ 35                 <tr style="background-color:powderblue;">
+ 36                     <th>ID</th><th>Name</th><th>Price</th><th>Amount</th><th>Sum</th><th>Delete</th>
+ 37                 </tr>
+ 38                 <?php $total = 0; ?>
+ 39                 <?php foreach ($cart as $item): ?>
+ 40                     <tr>
+ 41                         <td><?= $item['id'] ?></td>
+ 42                         <td><?= $item['name'] ?></td>
+ 43                         <td><?= $item['price'] ?> грн</td>
+ 44                         <td><?= $item['count'] ?></td>
+ 45                         <td><?= $item['price'] * $item['count'] ?> грн</td>
+ 46                         <td>
+ 47                             <button type="submit" name="remove_id" value="<?= $item['id'] ?>" class="trash-button">🗑️</button>
+ 48                         </td>
+ 49                     </tr>
+ 50                     <?php $total += $item['price'] * $item['count']; ?>
+ 51                 <?php endforeach; ?>
+ 52                 <tr>
+ 53                     <td colspan="4"><strong>Total</strong></td>
+ 54                     <td><strong><?= $total ?> грн</strong></td>
+ 55                     <td></td>
+ 56                 </tr>
+ 57             </table>
+ 58
+ 59             <div class="button-group">
+ 60                 <button type="submit" name="pay">Pay</button>
+ 61                 <button type="submit" name="cancel">Cancel</button>
+ 62             </div>
+ 63         </form>
+ 64     <?php endif; ?>
+ 65 </main>
+
+credential.php
+  1 <?php
+  2 return [
+  3     'userName' => 'Test',
+  4     'password' => '123123'
+  5 ];
+
+db.php
+  1 <?php
+  2 $db = new PDO('sqlite:products.db');
+  3
+  4 $db->exec("DROP TABLE IF EXISTS products");
+  5 $db->exec("
+  6     CREATE TABLE products (
+  7         id INTEGER PRIMARY KEY AUTOINCREMENT,
+  8         name TEXT NOT NULL,
+  9         price INTEGER NOT NULL
+ 10     )
+ 11 ");
+ 12
+ 13 $products = [
+ 14     ["🥛 Pasteurized Milk", 12],
+ 15     ["🍞 Black Bread", 9],
+ 16     ["🧀 White Cheese", 21],
+ 17     ["🥣 Sour Cream 20%", 25],
+ 18     ["🥤 Kefir 1%", 19],
+ 19     ["💧 Sparkling Water", 18],
+ 20     ["🍪 Cookies \"Весна\"", 14]
+ 21 ];
+ 22
+ 23 $stmt = $db->prepare("INSERT INTO products (name, price) VALUES (?, ?)");
+ 24
+ 25 foreach ($products as $product) {
+ 26     $stmt->execute($product);
+ 27 }
+ 28
+ 29 echo "Базу даних створено та заповнено!";
+ 30 ?>
+
+footer.php
+  1 <footer>
+  2     <div class="bottom-nav">
+  3         <a href="main.php?page=home">Home</a> |
+  4         <a href="main.php?page=products">Products</a> |
+  5         <a href="main.php?page=cart">Cart</a> |
+  6         <a href="#">About Us</a>
+  7     </div>
+  8 </footer>
+
+header.php
+  1 <header>
+  2     <nav class="top-nav">
+  3         <a href="index.php?page=home" class="left">Home</a>
+  4         <a href="index.php?page=products" class="center">Products</a>
+  5
+  6         <?php if (isset($_SESSION['user'])): ?>
+  7             <a href="index.php?page=cart" class="right">Cart</a>
+  8             <a href="index.php?page=profile" class="right">Profile</a>
+  9             <a href="index.php?page=logout" class="right">Logout</a>
+ 10         <?php else: ?>
+ 11             <a href="index.php?page=login" class="right">Login</a>
+ 12         <?php endif; ?>
+ 13     </nav>
+ 14 </header>
+
+index.php
+  1 <?php
+  2 session_start();
+  3
+  4 $page = $_GET['page'] ?? 'home';
+  5
+  6 $publicPages = ['login', 'page404'];
+  7
+  8 ob_start();
+  9
+ 10 if (!isset($_SESSION['user']) && !in_array($page, $publicPages)) {
+ 11     $contentPage = "page404.php";
+ 12 } else {
+ 13     switch ($page) {
+ 14         case "cart":
+ 15             $contentPage = "cart.php";
+ 16             break;
+ 17         case "products":
+ 18             $contentPage = "products.php";
+ 19             break;
+ 20         case "home":
+ 21             $contentPage = "products.php";
+ 22             break;
+ 23         case "profile":
+ 24             $contentPage = "profile.php";
+ 25             break;
+ 26         case "login":
+ 27             $contentPage = "login.php";
+ 28             break;
+ 29         case "logout":
+ 30             $contentPage = "logout.php";
+ 31             break;
+ 32     case "profile":
+ 33                 $contentPage = "profile.php";
+ 34                 break;
+ 35         default:
+ 36             $contentPage = "page404.php";
+ 37             break;
+ 38     }
+ 39 }
+ 40 ?>
+ 41 <!DOCTYPE html>
+ 42 <html lang="uk">
+ 43 <head>
+ 44     <meta charset="UTF-8">
+ 45     <title>My Shop</title>
+ 46     <link rel="stylesheet" href="style.css">
+ 47 </head>
+ 48 <body>
+ 49
+ 50 <?php require_once("header.php"); ?>
+ 51
+ 52 <main>
+ 53     <?php require_once($contentPage); ?>
+ 54 </main>
+ 55
+ 56 <?php require_once("footer.php"); ?>
+ 57
+ 58 </body>
+ 59 </html>
+ 60 <?php
+ 61 ob_end_flush();
+ 62 ?>
+ 63
+
+login.php
+  1 <?php
+  2 $errors = [];
+  3
+  4 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  5     $login = $_POST['username'] ?? '';
+  6     $password = $_POST['password'] ?? '';
+  7
+  8     if (!$login || !$password) {
+  9         $errors[] = 'Please enter both username and password.';
+ 10     } else {
+ 11         $credentials = require 'credential.php';
+ 12
+ 13         if ($login === $credentials['userName'] && $password === $credentials['password']) {
+ 14             $_SESSION['user'] = $login;
+ 15             $_SESSION['login_time'] = date("Y-m-d H:i:s");
+ 16             header("Location: index.php?page=products");
+ 17             exit;
+ 18         } else {
+ 19             $errors[] = 'Invalid login or password.';
+ 20         }
+ 21     }
+ 22 }
+ 23 ?>
+ 24
+ 25 <h1>Login</h1>
+ 26
+ 27 <?php foreach ($errors as $error): ?>
+ 28     <p style="color: red;"><?= htmlspecialchars($error) ?></p>
+ 29 <?php endforeach; ?>
+ 30
+ 31 <form method="POST">
+ 32     <label>Username: <input type="text" name="username" required></label><br><br>
+ 33     <label>Password: <input type="password" name="password" required></label><br><br>
+ 34     <button type="submit">Login</button>
+ 35 </form>
+ 36
+
+logout.php
+  1 <?php
+  2 if (session_status() === PHP_SESSION_NONE) {
+  3     session_start();
+  4 }
+  5 session_unset();
+  6 session_destroy();
+  7 header("Location: index.php?page=login");
+  8 exit;
+
+page404.php
+  1 <h1>Доступ заборонено</h1>
+  2 <p>Для перегляду цієї сторінки, вам необхідно <a href="main.php?page=login">увійти в систему</a>.</p>
+
+products.php
+  1 <?php
+  2
+  3 $db = new PDO('sqlite:products.db');
+  4
+  5 $products = [];
+  6 $stmt = $db->query("SELECT * FROM products");
+  7
+  8 while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+  9     $products[$row['id']] = $row;
+ 10 }
+ 11
+ 12 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+ 13     foreach ($products as $id => $product) {
+ 14         $count = (int)($_POST["count_$id"] ?? 0);
+ 15         if ($count > 0) {
+ 16             $_SESSION['cart'][$id] = [
+ 17                 'id' => $id,
+ 18                 'name' => $product['name'],
+ 19                 'price' => $product['price'],
+ 20                 'count' => $count,
+ 21             ];
+ 22         }
+ 23     }
+ 24     header("Location: index.php?page=cart");
+ 25     exit;
+ 26 }
+ 27 ?>
+ 28
+ 29 <main>
+ 30     <h1>Welcome to our store!</h1>
+ 31     <p>We offer the best products at affordable prices.</p>
+ 32
+ 33     <h2>Products</h2>
+ 34     <form method="POST">
+ 35         <table>
+ 36             <tr style="background-color:powderblue;"><th>Name</th><th>Price</th><th>Amount</th></tr>
+ 37             <?php foreach ($products as $id => $product): ?>
+ 38             <tr>
+ 39                 <td><?= htmlspecialchars($product['name']) ?></td>
+ 40                 <td><?= htmlspecialchars($product['price']) ?> грн</td>
+ 41                 <td><input type="number" name="count_<?= $id ?>" min="0" value="0"></td>
+ 42             </tr>
+ 43             <?php endforeach; ?>
+ 44         </table>
+ 45         <button type="submit">Add</button>
+ 46     </form>
+ 47 </main>
+ 48
+
+profile.php
+  1 <?php
+  2 if (session_status() === PHP_SESSION_NONE) {
+  3     session_start();
+  4 }
+  5
+  6 $errors = [];
+  7 $success = "";
+  8 $profileFile = 'user_profile.php';
+  9 $profile = [
+ 10     'first_name' => '',
+ 11     'last_name' => '',
+ 12     'birth_date' => '',
+ 13     'about' => '',
+ 14     'photo' => ''
+ 15 ];
+ 16
+ 17 if (file_exists($profileFile)) {
+ 18     $profile = include $profileFile;
+ 19 }
+ 20
+ 21 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+ 22     $first_name = trim($_POST['first_name'] ?? '');
+ 23     $last_name = trim($_POST['last_name'] ?? '');
+ 24     $birth_date = $_POST['birth_date'] ?? '';
+ 25     $about = trim($_POST['about'] ?? '');
+ 26
+ 27     if (strlen($first_name) < 2) {
+ 28         $errors[] = 'Ім’я повинно містити мінімум 2 символи.';
+ 29     }
+ 30
+ 31     if (strlen($last_name) < 2) {
+ 32         $errors[] = 'Прізвище повинно містити мінімум 2 символи.';
+ 33     }
+ 34
+ 35     if (!$birth_date || (strtotime($birth_date) > strtotime('-16 years'))) {
+ 36         $errors[] = 'Користувачеві має бути мінімум 16 років.';
+ 37     }
+ 38
+ 39     if (strlen($about) < 50) {
+ 40         $errors[] = 'Стисла інформація повинна містити щонайменше 50 символів.';
+ 41     }
+ 42
+ 43     $photoPath = $profile['photo'];
+ 44     if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
+ 45         $allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+ 46         if (!in_array($_FILES['photo']['type'], $allowedTypes)) {
+ 47             $errors[] = 'Формат фото має бути JPG або PNG.';
+ 48         } else {
+ 49             if (!is_dir('uploads')) {
+ 50                 mkdir('uploads');
+ 51             }
+ 52             $ext = pathinfo($_FILES['photo']['name'], PATHINFO_EXTENSION);
+ 53             $newFileName = 'uploads/' . uniqid('profile_', true) . '.' . $ext;
+ 54             if (move_uploaded_file($_FILES['photo']['tmp_name'], $newFileName)) {
+ 55                 $photoPath = $newFileName;
+ 56             } else {
+ 57                 $errors[] = 'Не вдалося зберегти фото.';
+ 58             }
+ 59         }
+ 60     }
+ 61
+ 62     if (empty($errors)) {
+ 63         $profile = [
+ 64             'first_name' => $first_name,
+ 65             'last_name' => $last_name,
+ 66             'birth_date' => $birth_date,
+ 67             'about' => $about,
+ 68             'photo' => $photoPath
+ 69         ];
+ 70
+ 71         file_put_contents($profileFile, '<?php return ' . var_export($profile, true) . ';');
+ 72         $success = "Профіль оновлено успішно!";
+ 73     }
+ 74 }
+ 75 ?>
+ 76
+ 77 <h1>Профіль користувача</h1>
+ 78
+ 79 <?php if (!empty($errors)): ?>
+ 80     <ul style="color:red;">
+ 81         <?php foreach ($errors as $error): ?>
+ 82             <li><?= htmlspecialchars($error) ?></li>
+ 83         <?php endforeach; ?>
+ 84     </ul>
+ 85 <?php elseif ($success): ?>
+ 86     <p style="color:green;"><?= $success ?></p>
+ 87 <?php endif; ?>
+ 88
+ 89 <form method="POST" enctype="multipart/form-data">
+ 90     <label>Ім’я: <input type="text" name="first_name" value="<?= htmlspecialchars($profile['first_name']) ?>" required></label><br><br>
+ 91     <label>Прізвище: <input type="text" name="last_name" value="<?= htmlspecialchars($profile['last_name']) ?>" required></label><br><br>
+ 92     <label>Дата народження: <input type="date" name="birth_date" value="<?= htmlspecialchars($profile['birth_date']) ?>" required></label><br><br>
+ 93     <label>Про себе:<br>
+ 94         <textarea name="about" rows="6" cols="60" required><?= htmlspecialchars($profile['about']) ?></textarea>
+ 95     </label><br><br>
+ 96     <label>Фото: <input type="file" name="photo" accept="image/png, image/jpeg"></label><br><br>
+ 97
+ 98     <?php if (!empty($profile['photo']) && file_exists($profile['photo'])): ?>
+ 99         <img src="<?= $profile['photo'] ?>" alt="Фото користувача" style="max-width:150px; display:block; margin-top:10px;">
+100     <?php endif; ?>
+101
+102     <button type="submit">Зберегти</button>
+103 </form>
+
+user_profile.php
+  1 <?php return array (
+  2   'first_name' => 'Поліна',
+  3   'last_name' => 'Давиденко',
+  4   'birth_date' => '2006-07-31',
+  5   'about' => 'хздщлшгнепасмолщшгнпеасмиолдщшгнеаквуіаипролщшгнеаквапрогшщгнепамицвуакпернгшщшгн76е5куакпер',
+  6   'photo' => 'uploads/profile_68420e14d4dc29.19775540.png',
